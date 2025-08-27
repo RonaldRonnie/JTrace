@@ -1,0 +1,12 @@
+version: 1
+basePackage: "com.example"
+failOn:
+  severity: "error"
+
+rules:
+  - id: test-rule
+    type: forbiddenDependency
+    from: "com.example.controller..*"
+    to: "com.example.repository..*"
+    severity: error
+    message: "Controllers must not access repositories directly."
