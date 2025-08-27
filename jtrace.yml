@@ -1,0 +1,56 @@
+version: 1
+basePackage: "com.example"
+failOn:
+  severity: "error"
+
+rules:
+  # Rule 1: Controllers must not access repositories directly
+  - id: layering-no-controller-to-repository
+    type: forbiddenDependency
+    from: "com.example.controller..*"
+    to: "com.example.repository..*"
+    severity: error
+    message: "Controllers must not access repositories directly. Use service layer instead."
+
+  # Rule 2: Service methods must be transactional
+  - id: service-methods-transactional
+    type: requireAnnotation
+    in: "com.example.service..*"
+    target: method
+    annotation: "org.springframework.transaction.annotation.Transactional"
+    severity: warning
+    message: "Service methods should be annotated with @Transactional for proper transaction management."
+
+  # Rule 3: Domain classes should be package-private
+  - id: visibility-domain-classes
+    type: visibility
+    target: class
+    in: "com.example.domain..*"
+    mustBe: "package-private"
+    severity: warning
+    message: "Domain classes should be package-private to enforce encapsulation."
+
+  # Rule 4: Layering architecture
+  - id: layering
+    type: layering
+    layers:
+      - name: controller
+        packages: ["com.example.controller..*"]
+      - name: service
+        packages: ["com.example.service..*"]
+      - name: repository
+        packages: ["com.example.repository..*"]
+      - name: domain
+        packages: ["com.example.domain..*"]
+    allowedDependencies:
+      - from: controller
+        to: service
+      - from: service
+        to: repository
+      - from: service
+        to: domain
+      - from: repository
+        to: domain
+    forbidCycles: true
+    severity: error
+    message: "Layering architecture must be respected. Controllers -> Services -> Repositories -> Domain."

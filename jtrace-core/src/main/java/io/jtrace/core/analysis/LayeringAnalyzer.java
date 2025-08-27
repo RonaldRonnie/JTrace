@@ -183,7 +183,7 @@ public class LayeringAnalyzer {
     private Violation createLayeringViolation(LayeringRule rule, ProjectModel.ClassInfo fromClass, 
                                              ProjectModel.ClassInfo toClass, String fromLayer, String toLayer) {
         Location location = new Location(
-            fromClass.getSourceFile(),
+            java.nio.file.Path.of(fromClass.getSourceFile()),
             1, // Default line number
             fromClass.getFullName()
         );
@@ -202,7 +202,7 @@ public class LayeringAnalyzer {
     
     private Violation createCycleViolation(LayeringRule rule) {
         Location location = new Location(
-            "", // No specific file
+            java.nio.file.Path.of(""), // No specific file
             0,
             "Layer dependencies"
         );

@@ -1,0 +1,4 @@
+com/example/controller/UserController.class
+com/example/repository/UserRepository.class
+com/example/service/UserService.class
+com/example/domain/User.class

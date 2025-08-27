@@ -49,9 +49,9 @@
 
     <modules>
         <module>jtrace-core</module>
-        <module>jtrace-cli</module>
+        <!-- <module>jtrace-cli</module> -->
         <module>jtrace-maven-plugin</module>
-        <module>jtrace-gradle-plugin</module>
+        <!-- <module>jtrace-gradle-plugin</module> -->
         <module>jtrace-agent</module>
         <module>jtrace-examples</module>
     </modules>

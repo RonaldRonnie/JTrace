@@ -6,8 +6,6 @@ import io.jtrace.core.engine.RuleEngine;
 import io.jtrace.core.model.Violation;
 import io.jtrace.core.report.ConsoleReporter;
 import picocli.CommandLine;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,24 +15,26 @@ import java.util.List;
 /**
  * Command to scan source code for architecture violations.
  */
-@Command(
+@CommandLine.Command(
     name = "scan",
     description = "Scan source code for architecture violations"
 )
 public class ScanCommand implements Runnable {
-
-    @Option(names = {"--config", "-c"}, description = "Configuration file path", defaultValue = "jtrace.yml")
-    private Path configFile;
-
-    @Option(names = {"--src", "-s"}, description = "Source directory", defaultValue = "src/main/java")
-    private Path sourceDir;
-
-    @Option(names = {"--format", "-f"}, description = "Output format", defaultValue = "console")
-    private String format;
-
-    @Option(names = {"--fail-on"}, description = "Fail on violations at or above this severity", defaultValue = "error")
-    private String failOn;
-
+    
+    @CommandLine.Option(
+        names = {"--config", "-c"},
+        description = "Configuration file path",
+        defaultValue = "jtrace.yml"
+    )
+    private String configFile;
+    
+    @CommandLine.Option(
+        names = {"--src", "-s"},
+        description = "Source directory path",
+        defaultValue = "src/main/java"
+    )
+    private String sourceDir;
+    
     @Override
     public void run() {
         try {
@@ -54,38 +54,27 @@ public class ScanCommand implements Runnable {
             List<Violation> violations = engine.run(config, sourcePaths);
 
             // Report results
-            if ("console".equals(format)) {
-                ConsoleReporter reporter = new ConsoleReporter();
-                reporter.report(violations);
+            ConsoleReporter reporter = new ConsoleReporter();
+            reporter.report(violations);
+
+            // Exit with error code if violations exceed failOn threshold
+            if (config.getFailOn().shouldFail(violations)) {
+                System.exit(1);
             }
-
-            // Exit with appropriate code
-            int exitCode = determineExitCode(violations, config.getFailOn().getSeverity());
-            System.exit(exitCode);
-
         } catch (Exception e) {
-            System.err.println("Error during scan: " + e.getMessage());
+            System.err.println("Error during analysis: " + e.getMessage());
             e.printStackTrace();
-            System.exit(2);
+            System.exit(1);
         }
     }
 
-    private List<Path> findSourceFiles(Path sourceDir) throws Exception {
+    private List<Path> findSourceFiles(String sourceDir) throws Exception {
         List<Path> sourceFiles = new ArrayList<>();
-        if (Files.exists(sourceDir)) {
-            Files.walk(sourceDir)
+        if (Files.exists(Path.of(sourceDir))) {
+            Files.walk(Path.of(sourceDir))
                 .filter(path -> path.toString().endsWith(".java"))
                 .forEach(sourceFiles::add);
         }
         return sourceFiles;
-    }
-
-    private int determineExitCode(List<Violation> violations, io.jtrace.core.model.Severity failOnSeverity) {
-        for (Violation violation : violations) {
-            if (violation.getSeverity().isAtLeast(failOnSeverity)) {
-                return 1; // Violations found at or above threshold
-            }
-        }
-        return 0; // No violations or all below threshold
     }
 }

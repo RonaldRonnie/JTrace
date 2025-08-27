@@ -39,7 +39,8 @@ public class JTraceConfigLoader {
 
     @SuppressWarnings("unchecked")
     private JTraceConfig parseConfig(Map<String, Object> data) {
-        String version = (String) data.get("version");
+        Object versionObj = data.get("version");
+        String version = versionObj != null ? versionObj.toString() : "1";
         String basePackage = (String) data.get("basePackage");
         
         Map<String, Object> failOnData = (Map<String, Object>) data.get("failOn");
@@ -49,7 +50,7 @@ public class JTraceConfigLoader {
         List<Rule> rules = parseRules(rulesData);
         
         return JTraceConfig.builder()
-                .version(version != null ? version : "1")
+                .version(version)
                 .basePackage(basePackage)
                 .failOn(failOn)
                 .rules(rules)

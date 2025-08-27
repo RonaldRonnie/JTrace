@@ -25,7 +25,7 @@
         <dependency>
             <groupId>org.gradle</groupId>
             <artifactId>gradle-api</artifactId>
-            <version>8.0</version>
+            <version>7.6.1</version>
             <scope>provided</scope>
         </dependency>
 

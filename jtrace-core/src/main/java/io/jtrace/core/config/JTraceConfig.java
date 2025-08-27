@@ -47,6 +47,11 @@ public class JTraceConfig {
             return severity;
         }
 
+        public boolean shouldFail(List<io.jtrace.core.model.Violation> violations) {
+            return violations.stream()
+                .anyMatch(violation -> violation.getSeverity().ordinal() <= severity.ordinal());
+        }
+
         public static FailOn fromString(String severity) {
             return new FailOn(Severity.fromString(severity));
         }

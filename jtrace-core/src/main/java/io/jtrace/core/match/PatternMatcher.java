@@ -23,11 +23,6 @@ public class PatternMatcher {
             return matchesRegex(pattern, packageName);
         }
         
-        // Check if it's a glob pattern (contains * or ?)
-        if (pattern.contains("*") || pattern.contains("?")) {
-            return matchesGlob(pattern, packageName);
-        }
-        
         // Check if it's a recursive wildcard pattern (ends with ..*)
         if (pattern.endsWith("..*")) {
             String basePattern = pattern.substring(0, pattern.length() - 3);
@@ -39,6 +34,11 @@ public class PatternMatcher {
             String basePattern = pattern.substring(0, pattern.length() - 2);
             return packageName.startsWith(basePattern) && 
                    !packageName.substring(basePattern.length()).contains(".");
+        }
+        
+        // Check if it's a glob pattern (contains * or ?)
+        if (pattern.contains("*") || pattern.contains("?")) {
+            return matchesGlob(pattern, packageName);
         }
         
         // Exact match

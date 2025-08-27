@@ -55,14 +55,24 @@ public class DependencyAnalyzer {
                                  ProjectModel projectModel) {
         // Check if fromClass imports toClass
         ProjectModel.PackageInfo fromPackage = projectModel.getPackage(fromClass.getPackageName());
-        if (fromPackage != null && fromPackage.getImports().contains(toClass.getFullName())) {
-            return true;
+        if (fromPackage != null) {
+            // Check if the simple class name is imported
+            String simpleClassName = toClass.getName();
+            if (fromPackage.getImports().contains(simpleClassName)) {
+                return true;
+            }
+            
+            // Check if the full class name is imported
+            if (fromPackage.getImports().contains(toClass.getFullName())) {
+                return true;
+            }
         }
         
         // Check if fromClass uses toClass in field types
         for (ProjectModel.FieldInfo field : fromClass.getFields()) {
             if (field.getType().equals(toClass.getFullName()) || 
-                field.getType().startsWith(toClass.getFullName() + ".")) {
+                field.getType().startsWith(toClass.getFullName() + ".") ||
+                field.getType().equals(toClass.getName())) {
                 return true;
             }
         }
@@ -70,13 +80,15 @@ public class DependencyAnalyzer {
         // Check if fromClass uses toClass in method return types or parameters
         for (ProjectModel.MethodInfo method : fromClass.getMethods()) {
             if (method.getReturnType().equals(toClass.getFullName()) || 
-                method.getReturnType().startsWith(toClass.getFullName() + ".")) {
+                method.getReturnType().startsWith(toClass.getFullName() + ".") ||
+                method.getReturnType().equals(toClass.getName())) {
                 return true;
             }
             
             for (ProjectModel.ParameterInfo param : method.getParameters()) {
                 if (param.getType().equals(toClass.getFullName()) || 
-                    param.getType().startsWith(toClass.getFullName() + ".")) {
+                    param.getType().startsWith(toClass.getFullName() + ".") ||
+                    param.getType().equals(toClass.getName())) {
                     return true;
                 }
             }
@@ -88,7 +100,7 @@ public class DependencyAnalyzer {
     private Violation createViolation(ForbiddenDependencyRule rule, ProjectModel.ClassInfo fromClass, 
                                      ProjectModel.ClassInfo toClass) {
         Location location = new Location(
-            fromClass.getSourceFile(),
+            java.nio.file.Path.of(fromClass.getSourceFile()),
             1, // Default line number
             fromClass.getFullName()
         );

@@ -143,7 +143,7 @@ public class RuleEngine {
     private Violation createVisibilityViolation(VisibilityRule rule, ProjectModel.ClassInfo classInfo, 
                                                ProjectModel.MethodInfo method, ProjectModel.FieldInfo field) {
         Location location = new Location(
-            classInfo.getSourceFile(),
+            java.nio.file.Path.of(classInfo.getSourceFile()),
             1, // Default line number
             formatElementName(classInfo, method, field)
         );

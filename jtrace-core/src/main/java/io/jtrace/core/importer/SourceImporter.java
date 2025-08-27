@@ -130,10 +130,13 @@ public class SourceImporter {
     }
     
     private Visibility determineVisibility(NodeWithModifiers<?> node) {
-        if (node.isPublic()) return Visibility.PUBLIC;
-        if (node.isProtected()) return Visibility.PROTECTED;
-        if (node.isPrivate()) return Visibility.PRIVATE;
-        return Visibility.PACKAGE_PRIVATE;
+        switch (node.getAccessSpecifier()) {
+            case PUBLIC: return Visibility.PUBLIC;
+            case PROTECTED: return Visibility.PROTECTED;
+            case PRIVATE: return Visibility.PRIVATE;
+            case NONE: return Visibility.PACKAGE_PRIVATE;
+            default: return Visibility.PACKAGE_PRIVATE;
+        }
     }
     
     private ClassType determineClassType(TypeDeclaration<?> typeDecl) {
