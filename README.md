@@ -1,171 +1,63 @@
 # JTrace - Live Architecture Enforcer
 
-JTrace is a powerful tool that lets teams define architecture rules as code and enforces them via static analysis at build/CI time and an optional runtime Java Agent that detects/blocks forbidden interactions.
+[![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://openjdk.java.net/)
+[![Maven](https://img.shields.io/badge/Maven-3.6+-red.svg)](https://maven.apache.org/)
+[![Gradle](https://img.shields.io/badge/Gradle-7.0+-green.svg)](https://gradle.org/)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-## Features
+**JTrace** is a powerful, framework-agnostic Live Architecture Enforcer that helps maintain clean architecture in Java projects. It analyzes your codebase in real-time and enforces architectural rules during build time and runtime.
 
-- **Static Analysis**: Analyze your codebase for architecture violations during build time
-- **Runtime Enforcement**: Optional Java Agent for runtime policy enforcement
-- **Multiple Rule Types**: Support for dependency rules, layering, annotations, and visibility
-- **Flexible Patterns**: Glob patterns, regex, and wildcards for package matching
-- **CI/CD Integration**: Maven and Gradle plugins for seamless integration
-- **Rich Reporting**: Console, HTML, JSON, and SARIF report formats
-- **Java 17+**: Built for modern Java applications
+## 🚀 Features
 
-## Quick Start
+- **🔍 Real-time Analysis**: Analyze source code during build and runtime
+- **📏 Multiple Rule Types**: Dependency rules, annotation requirements, layering, visibility, and cycle detection
+- **🔄 Framework Agnostic**: Works with Maven, Gradle, and standalone Java applications
+- **⚡ Fast**: Efficient pattern matching and AST analysis
+- **📊 Rich Reporting**: Detailed violation reports with actionable suggestions
+- **🔧 Flexible Configuration**: YAML-based rule configuration
+- **🎯 Multiple Integration Points**: Maven plugin, Gradle plugin, Java agent, and CLI
 
-### 1. Install JTrace
+## 🏗️ Architecture Rules Supported
 
-```bash
-# Download the latest release
-wget https://github.com/jtrace/jtrace/releases/latest/download/jtrace-cli.jar
+### 1. **Dependency Rules**
+- Forbidden dependencies between packages
+- Required dependencies
+- Dependency direction enforcement
 
-# Or build from source
-git clone https://github.com/jtrace/jtrace.git
-cd jtrace
-mvn clean install
-```
+### 2. **Annotation Rules**
+- Required annotations on classes, methods, or fields
+- Annotation validation and enforcement
 
-### 2. Initialize Configuration
+### 3. **Layering Rules**
+- Architectural layer enforcement
+- Package-to-layer mapping
+- Cross-layer dependency validation
 
-```bash
-java -jar jtrace-cli.jar init
-```
+### 4. **Visibility Rules**
+- Class, method, and field visibility enforcement
+- Access modifier validation
 
-This creates a `jtrace.yml` file with example rules.
+### 5. **Cycle Detection**
+- Dependency cycle identification
+- Circular reference prevention
 
-### 3. Scan Your Project
+## 🛠️ Installation & Setup
 
-```bash
-java -jar jtrace-cli.jar scan --src src/main/java
-```
+### Prerequisites
+- Java 17 or higher
+- Maven 3.6+ or Gradle 7.0+
 
-### 4. Enforce Rules
+### Quick Start
 
-```bash
-java -jar jtrace-cli.jar enforce --src src/main/java
-```
-
-## Configuration
-
-JTrace uses YAML configuration files. Here's an example:
-
-```yaml
-version: 1
-basePackage: "com.myapp"
-failOn:
-  severity: "error"
-
-rules:
-  # Forbidden dependencies
-  - id: no-controller-to-repository
-    type: forbiddenDependency
-    from: "com.myapp.controller..*"
-    to: "com.myapp.repository..*"
-    severity: error
-    message: "Controllers must not access repositories directly"
-
-  # Required annotations
-  - id: service-transactional
-    type: requireAnnotation
-    in: "com.myapp.service..*"
-    target: method
-    annotation: "org.springframework.transaction.annotation.Transactional"
-    severity: warning
-    message: "Service methods should be transactional"
-
-  # Layering architecture
-  - id: layering
-    type: layering
-    layers:
-      - name: controller
-        packages: ["com.myapp.controller..*"]
-      - name: service
-        packages: ["com.myapp.service..*"]
-      - name: repository
-        packages: ["com.myapp.repository..*"]
-    allowedDependencies:
-      - from: controller
-        to: service
-      - from: service
-        to: repository
-    forbidCycles: true
-    severity: error
-```
-
-## Rule Types
-
-### Forbidden Dependency Rules
-Prevent specific package dependencies:
-
-```yaml
-- id: no-web-to-db
-  type: forbiddenDependency
-  from: "com.myapp.web..*"
-  to: "com.myapp.database..*"
-  severity: error
-  message: "Web layer cannot directly access database layer"
-```
-
-### Required Annotation Rules
-Ensure classes, methods, or fields have specific annotations:
-
-```yaml
-- id: entity-validation
-  type: requireAnnotation
-  in: "com.myapp.entity..*"
-  target: class
-  annotation: "javax.validation.constraints.Valid"
-  severity: warning
-  message: "Entity classes should have validation annotations"
-```
-
-### Layering Rules
-Enforce architectural layers and dependencies:
-
-```yaml
-- id: clean-architecture
-  type: layering
-  layers:
-    - name: presentation
-      packages: ["com.myapp.presentation..*"]
-    - name: business
-      packages: ["com.myapp.business..*"]
-    - name: data
-      packages: ["com.myapp.data..*"]
-  allowedDependencies:
-    - from: presentation
-      to: business
-    - from: business
-      to: data
-  forbidCycles: true
-  severity: error
-```
-
-### Visibility Rules
-Control access modifiers:
-
-```yaml
-- id: domain-encapsulation
-  type: visibility
-  target: class
-  in: "com.myapp.domain..*"
-  mustBe: "package-private"
-  severity: warning
-  message: "Domain classes should be package-private"
-```
-
-## Integration
-
-### Maven Plugin
-
-Add to your `pom.xml`:
-
+#### Option 1: Maven Plugin (Recommended)
 ```xml
 <plugin>
     <groupId>io.jtrace</groupId>
     <artifactId>jtrace-maven-plugin</artifactId>
     <version>0.1.0-SNAPSHOT</version>
+    <configuration>
+        <configFile>jtrace.yml</configFile>
+    </configuration>
     <executions>
         <execution>
             <goals>
@@ -176,91 +68,371 @@ Add to your `pom.xml`:
 </plugin>
 ```
 
-Run with:
-```bash
-mvn jtrace:scan
-```
-
-### Gradle Plugin
-
-Add to your `build.gradle`:
-
+#### Option 2: Gradle Plugin
 ```groovy
 plugins {
     id 'io.jtrace.gradle' version '0.1.0-SNAPSHOT'
 }
 
 jtrace {
-    configFile = 'jtrace.yml'
-    failOn = 'error'
+    configFile = file('jtrace.yml')
 }
 ```
 
-### Runtime Agent
-
-For runtime enforcement, add the JVM argument:
-
+#### Option 3: Java Agent
 ```bash
--javaagent:jtrace-agent.jar
+java -javaagent:jtrace-agent-0.1.0-SNAPSHOT.jar -jar your-application.jar
 ```
 
-## CLI Commands
-
-### Scan
-Analyze your codebase for violations:
+#### Option 4: Standalone CLI
 ```bash
-jtrace scan --config jtrace.yml --src src/main/java
+# Download the CLI jar
+java -jar jtrace-cli-0.1.0-SNAPSHOT.jar scan --config jtrace.yml --src src/main/java
 ```
 
-### Enforce
-Fail the build on violations:
-```bash
-jtrace enforce --config jtrace.yml --src src/main/java --fail-on error
+## 📋 Configuration
+
+Create a `jtrace.yml` file in your project root:
+
+```yaml
+version: 1
+basePackage: "com.example"
+failOn:
+  severity: "error"
+
+rules:
+  # Forbidden dependency rule
+  - id: no-controller-to-repository
+    type: forbiddenDependency
+    from: "com.example.controller..*"
+    to: "com.example.repository..*"
+    severity: error
+    message: "Controllers must not access repositories directly."
+
+  # Required annotation rule
+  - id: service-annotation-required
+    type: requireAnnotation
+    target: "com.example.service..*"
+    annotation: "org.springframework.stereotype.Service"
+    severity: error
+    message: "Service classes must be annotated with @Service"
+
+  # Layering rule
+  - id: layer-dependencies
+    type: layering
+    layers:
+      - name: "presentation"
+        packages: ["com.example.controller..*"]
+      - name: "business"
+        packages: ["com.example.service..*"]
+      - name: "data"
+        packages: ["com.example.repository..*"]
+    allowedDependencies:
+      - from: "presentation"
+        to: ["business"]
+      - from: "business"
+        to: ["data"]
+    severity: error
+    message: "Invalid layer dependency detected"
+
+  # Visibility rule
+  - id: public-service-methods
+    type: visibility
+    target: "com.example.service..*"
+    visibility: "public"
+    scope: "method"
+    severity: warning
+    message: "Service methods should be public"
 ```
 
-### Report
-Generate detailed reports:
+## 🔧 Usage Examples
+
+### Maven Integration
+
+#### Build-time Enforcement
 ```bash
-jtrace report --config jtrace.yml --src src/main/java --format html --out reports/
+mvn io.jtrace:jtrace-maven-plugin:0.1.0-SNAPSHOT:scan
 ```
 
-### Init
-Create a new configuration file:
-```bash
-jtrace init --output jtrace.yml
+#### CI/CD Integration
+```xml
+<plugin>
+    <groupId>io.jtrace</groupId>
+    <artifactId>jtrace-maven-plugin</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <executions>
+        <execution>
+            <id>architecture-check</id>
+            <phase>verify</phase>
+            <goals>
+                <goal>scan</goal>
+            </goals>
+            <configuration>
+                <failOnViolations>true</failOnViolations>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
 ```
 
-## Examples
+### Gradle Integration
 
-Check out the `jtrace-examples` module for complete working examples with intentional architecture violations.
-
-## Building from Source
-
+#### Build-time Enforcement
 ```bash
-git clone https://github.com/jtrace/jtrace.git
-cd jtrace
-mvn clean install
+./gradlew jtraceScan
 ```
 
-## Requirements
+#### CI/CD Integration
+```groovy
+tasks.named('check') {
+    dependsOn 'jtraceScan'
+}
 
-- Java 17 or higher
-- Maven 3.6+ or Gradle 7.0+
+jtrace {
+    configFile = file('jtrace.yml')
+    failOnViolations = true
+}
+```
 
-## Contributing
+### Runtime Enforcement
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
+#### Java Agent
+```bash
+# Development
+java -javaagent:jtrace-agent-0.1.0-SNAPSHOT.jar \
+     -Djtrace.config=jtrace.yml \
+     -jar your-app.jar
 
-## License
+# Production
+java -javaagent:jtrace-agent-0.1.0-SNAPSHOT.jar \
+     -Djtrace.config=jtrace.yml \
+     -Djtrace.mode=enforce \
+     -jar your-app.jar
+```
+
+#### Docker Integration
+```dockerfile
+FROM openjdk:17-jre-slim
+COPY jtrace-agent-0.1.0-SNAPSHOT.jar /app/
+COPY jtrace.yml /app/
+COPY your-app.jar /app/
+
+ENTRYPOINT ["java", "-javaagent:/app/jtrace-agent-0.1.0-SNAPSHOT.jar", \
+            "-Djtrace.config=/app/jtrace.yml", \
+            "-jar", "/app/your-app.jar"]
+```
+
+## 🏗️ Framework-Specific Configurations
+
+### Spring Boot
+```yaml
+# jtrace.yml
+rules:
+  - id: spring-service-annotation
+    type: requireAnnotation
+    target: "com.example.service..*"
+    annotation: "org.springframework.stereotype.Service"
+    severity: error
+
+  - id: spring-controller-annotation
+    type: requireAnnotation
+    target: "com.example.controller..*"
+    annotation: "org.springframework.stereotype.Controller"
+    severity: error
+
+  - id: spring-repository-annotation
+    type: requireAnnotation
+    target: "com.example.repository..*"
+    annotation: "org.springframework.stereotype.Repository"
+    severity: error
+```
+
+### Jakarta EE / Java EE
+```yaml
+# jtrace.yml
+rules:
+  - id: ejb-annotation
+    type: requireAnnotation
+    target: "com.example.ejb..*"
+    annotation: "javax.ejb.Stateless"
+    severity: error
+
+  - id: web-servlet
+    type: requireAnnotation
+    target: "com.example.web..*"
+    annotation: "javax.servlet.annotation.WebServlet"
+    severity: error
+```
+
+### Microservices
+```yaml
+# jtrace.yml
+rules:
+  - id: microservice-boundaries
+    type: forbiddenDependency
+    from: "com.example.user..*"
+    to: "com.example.order..*"
+    severity: error
+    message: "Cross-service dependencies not allowed"
+
+  - id: internal-package-structure
+    type: layering
+    layers:
+      - name: "api"
+        packages: ["com.example.user.api..*"]
+      - name: "internal"
+        packages: ["com.example.user.internal..*"]
+    allowedDependencies:
+      - from: "api"
+        to: ["internal"]
+    severity: error
+```
+
+## 📊 Violation Reports
+
+JTrace provides detailed violation reports:
+
+```
+🚨 Architecture Violations Found: 3
+
+❌ ERROR: Forbidden dependency detected
+   Rule: no-controller-to-repository
+   From: com.example.controller.UserController
+   To: com.example.repository.UserRepository
+   File: src/main/java/com/example/controller/UserController.java:25
+   Message: Controllers must not access repositories directly.
+
+⚠️  WARNING: Missing required annotation
+   Rule: service-annotation-required
+   Target: com.example.service.UserService
+   Required: @Service
+   File: src/main/java/com/example/service/UserService.java:15
+   Message: Service classes must be annotated with @Service
+
+❌ ERROR: Invalid layer dependency
+   Rule: layer-dependencies
+   From: com.example.controller.UserController
+   To: com.example.repository.UserRepository
+   File: src/main/java/com/example/controller/UserController.java:25
+   Message: Invalid layer dependency detected
+
+💡 Suggestions:
+   - Move repository access to service layer
+   - Add @Service annotation to UserService
+   - Review architectural boundaries
+```
+
+## 🔍 Advanced Configuration
+
+### Pattern Matching
+```yaml
+rules:
+  # Recursive wildcard (any depth)
+  - id: deep-nested
+    type: forbiddenDependency
+    from: "com.example.api..*"
+    to: "com.example.internal..*"
+
+  # Single level wildcard
+  - id: single-level
+    type: forbiddenDependency
+    from: "com.example.api.*"
+    to: "com.example.internal.*"
+
+  # Regex patterns
+  - id: regex-pattern
+    type: forbiddenDependency
+    from: "^com\\.example\\.(controller|service)\\.\\w+$"
+    to: "com.example.repository..*"
+```
+
+### Conditional Rules
+```yaml
+rules:
+  - id: conditional-annotation
+    type: requireAnnotation
+    target: "com.example.service..*"
+    annotation: "org.springframework.stereotype.Service"
+    condition:
+      exclude: ["com.example.service.util..*"]
+    severity: error
+```
+
+## 🚀 Performance & Best Practices
+
+### Performance Tips
+1. **Use specific patterns** instead of broad wildcards
+2. **Limit rule complexity** for faster analysis
+3. **Cache results** in CI/CD environments
+4. **Run during build** rather than IDE for better performance
+
+### Best Practices
+1. **Start simple** with basic dependency rules
+2. **Gradually add complexity** as your architecture matures
+3. **Use meaningful rule IDs** for easier maintenance
+4. **Set appropriate severity levels** (error, warning, info)
+5. **Document your rules** in team documentation
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### Build Failures
+```bash
+# Check JTrace configuration
+mvn io.jtrace:jtrace-maven-plugin:0.1.0-SNAPSHOT:scan -X
+
+# Verify rule syntax
+java -jar jtrace-cli-0.1.0-SNAPSHOT.jar validate --config jtrace.yml
+```
+
+#### Performance Issues
+```yaml
+# jtrace.yml - Optimize patterns
+rules:
+  - id: optimized-rule
+    type: forbiddenDependency
+    from: "com.example.controller.UserController"  # Specific class
+    to: "com.example.repository.UserRepository"    # Specific class
+    # Instead of broad patterns like "com.example.controller..*"
+```
+
+#### False Positives
+```yaml
+# jtrace.yml - Add exclusions
+rules:
+  - id: flexible-rule
+    type: forbiddenDependency
+    from: "com.example.controller..*"
+    to: "com.example.repository..*"
+    exclude:
+      - "com.example.controller.util.ValidationHelper"
+      - "com.example.repository.spec.CustomSpecification"
+```
+
+## 📚 Additional Resources
+
+- [📖 Complete Documentation](DEPLOYMENT_README.md)
+- [🔧 Setup & Troubleshooting Guide](SETUP_GUIDE.md)
+- [📋 Command Reference](COMMAND_REFERENCE.md)
+- [🏗️ Architecture Examples](ARCHITECTURE_EXAMPLES.md)
+- [🚀 Deployment Guide](DEPLOYMENT_SUMMARY.md)
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Support
+## 🆘 Support
 
-- Documentation: [https://jtrace.io/docs](https://jtrace.io/docs)
-- Issues: [https://github.com/jtrace/jtrace/issues](https://github.com/jtrace/jtrace/issues)
-- Discussions: [https://github.com/jtrace/jtrace/discussions](https://github.com/jtrace/jtrace/discussions)
+- **Documentation**: Check the guides above
+- **Examples**: See `jtrace-examples` module
+- **Issues**: Report problems through the project repository
+- **Community**: Join our discussions and share your use cases
+
+---
+
+**JTrace - Enforcing Clean Architecture, One Rule at a Time** 🏗️✨
