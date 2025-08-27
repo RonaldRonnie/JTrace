@@ -2,6 +2,7 @@ package io.jtrace.core.engine;
 
 import io.jtrace.core.analysis.*;
 import io.jtrace.core.config.JTraceConfig;
+import io.jtrace.core.importer.ProjectModel;
 import io.jtrace.core.importer.SourceImporter;
 import io.jtrace.core.model.*;
 import io.jtrace.core.match.PatternMatcher;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 /**
  * Main engine that orchestrates the analysis of source code against architecture rules.
@@ -77,10 +79,110 @@ public class RuleEngine {
                 throw new IllegalArgumentException("Unknown rule type: " + rule.getType());
         }
     }
-
+    
     private List<Violation> analyzeVisibilityRule(VisibilityRule rule, ProjectModel projectModel) {
-        // TODO: Implement visibility analysis
-        return new ArrayList<>();
+        List<Violation> violations = new ArrayList<>();
+        
+        // Find all classes matching the package pattern
+        List<ProjectModel.ClassInfo> matchingClasses = projectModel.getAllClasses().stream()
+            .filter(classInfo -> patternMatcher.matches(rule.getPackagePattern(), classInfo.getFullName()))
+            .collect(Collectors.toList());
+        
+        for (ProjectModel.ClassInfo classInfo : matchingClasses) {
+            switch (rule.getTarget()) {
+                case CLASS:
+                    checkClassVisibility(rule, classInfo, violations);
+                    break;
+                case METHOD:
+                    checkMethodVisibility(rule, classInfo, violations);
+                    break;
+                case FIELD:
+                    checkFieldVisibility(rule, classInfo, violations);
+                    break;
+            }
+        }
+        
+        return violations;
+    }
+    
+    private void checkClassVisibility(VisibilityRule rule, ProjectModel.ClassInfo classInfo, 
+                                    List<Violation> violations) {
+        if (classInfo.getVisibility() != mapVisibility(rule.getMustBe())) {
+            violations.add(createVisibilityViolation(rule, classInfo, null, null));
+        }
+    }
+    
+    private void checkMethodVisibility(VisibilityRule rule, ProjectModel.ClassInfo classInfo, 
+                                     List<Violation> violations) {
+        for (ProjectModel.MethodInfo method : classInfo.getMethods()) {
+            if (method.getVisibility() != mapVisibility(rule.getMustBe())) {
+                violations.add(createVisibilityViolation(rule, classInfo, method, null));
+            }
+        }
+    }
+    
+    private void checkFieldVisibility(VisibilityRule rule, ProjectModel.ClassInfo classInfo, 
+                                    List<Violation> violations) {
+        for (ProjectModel.FieldInfo field : classInfo.getFields()) {
+            if (field.getVisibility() != mapVisibility(rule.getMustBe())) {
+                violations.add(createVisibilityViolation(rule, classInfo, null, field));
+            }
+        }
+    }
+    
+    private ProjectModel.Visibility mapVisibility(VisibilityRule.Visibility visibility) {
+        switch (visibility) {
+            case PUBLIC: return ProjectModel.Visibility.PUBLIC;
+            case PROTECTED: return ProjectModel.Visibility.PROTECTED;
+            case PRIVATE: return ProjectModel.Visibility.PRIVATE;
+            case PACKAGE_PRIVATE: return ProjectModel.Visibility.PACKAGE_PRIVATE;
+            default: return ProjectModel.Visibility.PACKAGE_PRIVATE;
+        }
+    }
+    
+    private Violation createVisibilityViolation(VisibilityRule rule, ProjectModel.ClassInfo classInfo, 
+                                               ProjectModel.MethodInfo method, ProjectModel.FieldInfo field) {
+        Location location = new Location(
+            classInfo.getSourceFile(),
+            1, // Default line number
+            formatElementName(classInfo, method, field)
+        );
+        
+        String elementName = formatElementName(classInfo, method, field);
+        String message = String.format("Visibility violation: %s must be %s, but is %s. %s", 
+                                     elementName, rule.getMustBe().toString().toLowerCase(),
+                                     getCurrentVisibility(classInfo, method, field).toString().toLowerCase(),
+                                     rule.getMessage());
+        
+        return new Violation(
+            rule.getId(),
+            message,
+            rule.getSeverity(),
+            location
+        );
+    }
+    
+    private String formatElementName(ProjectModel.ClassInfo classInfo, ProjectModel.MethodInfo method, 
+                                   ProjectModel.FieldInfo field) {
+        if (method != null) {
+            return classInfo.getFullName() + "#" + method.getName();
+        } else if (field != null) {
+            return classInfo.getFullName() + "." + field.getName();
+        } else {
+            return classInfo.getFullName();
+        }
+    }
+    
+    private ProjectModel.Visibility getCurrentVisibility(ProjectModel.ClassInfo classInfo, 
+                                                       ProjectModel.MethodInfo method, 
+                                                       ProjectModel.FieldInfo field) {
+        if (method != null) {
+            return method.getVisibility();
+        } else if (field != null) {
+            return field.getVisibility();
+        } else {
+            return classInfo.getVisibility();
+        }
     }
 
     /**

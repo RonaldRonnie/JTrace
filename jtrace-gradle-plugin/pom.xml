@@ -13,17 +13,18 @@
     <artifactId>jtrace-gradle-plugin</artifactId>
     <name>JTrace Gradle Plugin</name>
     <description>Gradle plugin for JTrace architecture enforcement</description>
-    <packaging>maven-plugin</packaging>
 
     <dependencies>
+        <!-- Core module -->
         <dependency>
             <groupId>io.jtrace</groupId>
             <artifactId>jtrace-core</artifactId>
         </dependency>
-        
+
+        <!-- Gradle API -->
         <dependency>
             <groupId>org.gradle</groupId>
-            <artifactId>gradle-tooling-api</artifactId>
+            <artifactId>gradle-api</artifactId>
             <version>8.0</version>
             <scope>provided</scope>
         </dependency>
@@ -43,10 +44,10 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-plugin-plugin</artifactId>
-                <version>3.6.4</version>
+                <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <goalPrefix>jtrace</goalPrefix>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                 </configuration>
             </plugin>
         </plugins>

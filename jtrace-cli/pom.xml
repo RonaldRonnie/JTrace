@@ -15,11 +15,13 @@
     <description>Command-line interface for JTrace</description>
 
     <dependencies>
+        <!-- Core module -->
         <dependency>
             <groupId>io.jtrace</groupId>
             <artifactId>jtrace-core</artifactId>
         </dependency>
-        
+
+        <!-- CLI framework -->
         <dependency>
             <groupId>info.picocli</groupId>
             <artifactId>picocli</artifactId>
@@ -54,6 +56,16 @@
                                     <mainClass>io.jtrace.cli.JTraceCommand</mainClass>
                                 </transformer>
                             </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                         </configuration>
                     </execution>
                 </executions>

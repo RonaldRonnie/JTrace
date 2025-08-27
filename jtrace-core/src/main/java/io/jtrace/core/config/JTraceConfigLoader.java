@@ -31,7 +31,7 @@ public class JTraceConfigLoader {
      * Loads configuration from an input stream.
      */
     public JTraceConfig loadFromInputStream(InputStream input) {
-        Yaml yaml = new Yaml(new Constructor(Map.class));
+        Yaml yaml = new Yaml();
         Map<String, Object> data = yaml.load(input);
         
         return parseConfig(data);
@@ -43,7 +43,7 @@ public class JTraceConfigLoader {
         String basePackage = (String) data.get("basePackage");
         
         Map<String, Object> failOnData = (Map<String, Object>) data.get("failOn");
-        FailOn failOn = parseFailOn(failOnData);
+        JTraceConfig.FailOn failOn = parseFailOn(failOnData);
         
         List<Map<String, Object>> rulesData = (List<Map<String, Object>>) data.get("rules");
         List<Rule> rules = parseRules(rulesData);
@@ -56,17 +56,17 @@ public class JTraceConfigLoader {
                 .build();
     }
 
-    private FailOn parseFailOn(Map<String, Object> failOnData) {
+    private JTraceConfig.FailOn parseFailOn(Map<String, Object> failOnData) {
         if (failOnData == null) {
-            return new FailOn(Severity.ERROR);
+            return new JTraceConfig.FailOn(Severity.ERROR);
         }
         
         String severity = (String) failOnData.get("severity");
         if (severity == null) {
-            return new FailOn(Severity.ERROR);
+            return new JTraceConfig.FailOn(Severity.ERROR);
         }
         
-        return FailOn.fromString(severity);
+        return JTraceConfig.FailOn.fromString(severity);
     }
 
     @SuppressWarnings("unchecked")

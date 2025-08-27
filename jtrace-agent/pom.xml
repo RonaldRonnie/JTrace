@@ -15,11 +15,13 @@
     <description>Runtime Java Agent for JTrace</description>
 
     <dependencies>
+        <!-- Core module -->
         <dependency>
             <groupId>io.jtrace</groupId>
             <artifactId>jtrace-core</artifactId>
         </dependency>
-        
+
+        <!-- ByteBuddy for runtime instrumentation -->
         <dependency>
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy</artifactId>
@@ -27,10 +29,6 @@
         <dependency>
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy-agent</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-core</artifactId>
         </dependency>
 
         <!-- Testing -->

@@ -23,7 +23,7 @@ public class ProjectModel {
     }
 
     public void addClass(ClassInfo classInfo) {
-        classes.put(classInfo.getFullyQualifiedName(), classInfo);
+        classes.put(classInfo.getFullName(), classInfo);
     }
 
     public void addMethod(MethodInfo methodInfo) {
@@ -38,7 +38,7 @@ public class ProjectModel {
         return packages.values();
     }
 
-    public Collection<ClassInfo> getClasses() {
+    public Collection<ClassInfo> getAllClasses() {
         return classes.values();
     }
 
@@ -65,10 +65,12 @@ public class ProjectModel {
     public static class PackageInfo {
         private final String name;
         private final Set<ClassInfo> classes;
+        private final Set<String> imports;
 
         public PackageInfo(String name) {
             this.name = name;
             this.classes = new HashSet<>();
+            this.imports = new HashSet<>();
         }
 
         public String getName() {
@@ -79,25 +81,37 @@ public class ProjectModel {
             return classes;
         }
 
+        public Set<String> getImports() {
+            return imports;
+        }
+
         public void addClass(ClassInfo classInfo) {
             classes.add(classInfo);
+        }
+
+        public void addImports(Set<String> imports) {
+            this.imports.addAll(imports);
         }
     }
 
     public static class ClassInfo {
         private final String name;
+        private final String fullName;
         private final String packageName;
-        private final String fullyQualifiedName;
+        private final Visibility visibility;
+        private final ClassType classType;
         private final Set<String> annotations;
         private final Set<MethodInfo> methods;
         private final Set<FieldInfo> fields;
-        private final Visibility visibility;
+        private String sourceFile;
+        private String enclosingClass;
 
-        public ClassInfo(String name, String packageName, Visibility visibility) {
+        public ClassInfo(String name, String fullName, Visibility visibility, ClassType classType) {
             this.name = name;
-            this.packageName = packageName;
-            this.fullyQualifiedName = packageName + "." + name;
+            this.fullName = fullName;
+            this.packageName = fullName.substring(0, fullName.lastIndexOf('.'));
             this.visibility = visibility;
+            this.classType = classType;
             this.annotations = new HashSet<>();
             this.methods = new HashSet<>();
             this.fields = new HashSet<>();
@@ -107,12 +121,20 @@ public class ProjectModel {
             return name;
         }
 
+        public String getFullName() {
+            return fullName;
+        }
+
         public String getPackageName() {
             return packageName;
         }
 
-        public String getFullyQualifiedName() {
-            return fullyQualifiedName;
+        public Visibility getVisibility() {
+            return visibility;
+        }
+
+        public ClassType getClassType() {
+            return classType;
         }
 
         public Set<String> getAnnotations() {
@@ -127,8 +149,20 @@ public class ProjectModel {
             return fields;
         }
 
-        public Visibility getVisibility() {
-            return visibility;
+        public String getSourceFile() {
+            return sourceFile;
+        }
+
+        public void setSourceFile(String sourceFile) {
+            this.sourceFile = sourceFile;
+        }
+
+        public String getEnclosingClass() {
+            return enclosingClass;
+        }
+
+        public void setEnclosingClass(String enclosingClass) {
+            this.enclosingClass = enclosingClass;
         }
 
         public void addAnnotation(String annotation) {
@@ -142,79 +176,101 @@ public class ProjectModel {
         public void addField(FieldInfo field) {
             fields.add(field);
         }
+
+        public void setAnnotations(List<String> annotations) {
+            this.annotations.clear();
+            this.annotations.addAll(annotations);
+        }
     }
 
     public static class MethodInfo {
         private final String name;
-        private final String signature;
-        private final ClassInfo declaringClass;
-        private final Set<String> annotations;
+        private final String returnType;
         private final Visibility visibility;
+        private final List<ParameterInfo> parameters;
+        private final List<String> annotations;
 
-        public MethodInfo(String name, String signature, ClassInfo declaringClass, Visibility visibility) {
+        public MethodInfo(String name, String returnType, Visibility visibility, 
+                         List<ParameterInfo> parameters, List<String> annotations) {
             this.name = name;
-            this.signature = signature;
-            this.declaringClass = declaringClass;
+            this.returnType = returnType;
             this.visibility = visibility;
-            this.annotations = new HashSet<>();
+            this.parameters = parameters;
+            this.annotations = annotations;
         }
 
         public String getName() {
             return name;
         }
 
-        public String getSignature() {
-            return signature;
-        }
-
-        public ClassInfo getDeclaringClass() {
-            return declaringClass;
-        }
-
-        public Set<String> getAnnotations() {
-            return annotations;
+        public String getReturnType() {
+            return returnType;
         }
 
         public Visibility getVisibility() {
             return visibility;
         }
 
-        public void addAnnotation(String annotation) {
-            annotations.add(annotation);
+        public List<ParameterInfo> getParameters() {
+            return parameters;
+        }
+
+        public List<String> getAnnotations() {
+            return annotations;
+        }
+
+        public String getSignature() {
+            return name + "(" + parameters.stream()
+                .map(ParameterInfo::getType)
+                .reduce("", (a, b) -> a + (a.isEmpty() ? "" : ", ") + b) + ")";
         }
     }
 
     public static class FieldInfo {
         private final String name;
-        private final ClassInfo declaringClass;
-        private final Set<String> annotations;
+        private final String type;
         private final Visibility visibility;
+        private final List<String> annotations;
 
-        public FieldInfo(String name, ClassInfo declaringClass, Visibility visibility) {
+        public FieldInfo(String name, String type, Visibility visibility, List<String> annotations) {
             this.name = name;
-            this.declaringClass = declaringClass;
+            this.type = type;
             this.visibility = visibility;
-            this.annotations = new HashSet<>();
+            this.annotations = annotations;
         }
 
         public String getName() {
             return name;
         }
 
-        public ClassInfo getDeclaringClass() {
-            return declaringClass;
-        }
-
-        public Set<String> getAnnotations() {
-            return annotations;
+        public String getType() {
+            return type;
         }
 
         public Visibility getVisibility() {
             return visibility;
         }
 
-        public void addAnnotation(String annotation) {
-            annotations.add(annotation);
+        public List<String> getAnnotations() {
+            return annotations;
+        }
+    }
+
+    public static class ParameterInfo {
+        private final String name;
+        private final String type;
+
+        public ParameterInfo(String name, String type) {
+            this.name = name;
+            this.type = type;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getType() {
+            return type;
         }
     }
 
@@ -254,6 +310,10 @@ public class ProjectModel {
 
     public enum Visibility {
         PUBLIC, PROTECTED, PACKAGE_PRIVATE, PRIVATE
+    }
+
+    public enum ClassType {
+        CLASS, INTERFACE, ENUM, ANNOTATION
     }
 
     public static class Location {
